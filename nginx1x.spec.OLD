@@ -1,0 +1,63 @@
+%define nginx_user nginx
+%define nginx_group nginx
+%define nginx_logdir %{_localstatedir}/log/nginx
+%define nginx_confdir %{_sysconfdir}/nginx
+%define openssl_version 1.0.2k
+
+Summary: High performance web server
+Name: nginx
+Version: 1.6.0
+
+Source0: http://nginx.org/download/%{name}-%{version}.tar.gz
+Source1: logrotate
+Source2: nginx.init
+Source3: nginx.sysconf
+Source4: nginx.conf
+Source5: nginx.vh.default.conf
+Source6: nginx.vh.example_ssl.conf
+Source7: https://github.com/SpiderLabs/ModSecurity-nginx.git
+Source8: https://www.openssl.org/source/openssl-%{openssl_version}.tar.gz
+
+Requires: openssl >= 1.0.2
+BuildRequires: openssl-devel >= 1.0.2
+BuildRequires: zlib-devel
+BuildRequires: pcre-devel
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+
+%prep
+%setup -q
+
+%{__tar} zxvf %{SOURCE8}
+%setup -T -D -a 8
+
+./configure \
+        --prefix=%{_sysconfdir}/nginx/ \
+        --conf-path=%{_sysconfdir}/nginx/nginx.conf \
+        --pid-path=%{_localstatedir}/run/%{name}.pid \
+        --lock-path=%{_localstatedir}/lock/subsys/%{name} \
+        --http-client-body-temp-path=%{_localstatedir}/cache/nginx/client_temp \
+        --http-proxy-temp-path=%{_localstatedir}/cache/nginx/proxy_temp \
+        --http-fastcgi-temp-path=%{_localstatedir}/cache/nginx/fastcgi_temp \
+        --http-uwsgi-temp-path=%{_localstatedir}/cache/nginx/uwsgi_temp \
+        --http-scgi-temp-path=%{_localstatedir}/cache/nginx/scgi_temp \
+        --user=%{nginx_user} \
+        --group=%{nginx_group} \
+        --with-threads \
+        --with-http_ssl_module \
+        --with-http_realip_module \
+        --with-http_addition_module \
+        --with-http_sub_module \
+        --with-http_gzip_static_module \
+        --with-http_random_index_module \
+        --with-http_secure_link_module \
+        --with-http_stub_status_module \
+        --with-mail \
+        --with-mail_ssl_module \
+        --with-file-aio \
+        --with-debug \
+        --with-cc-opt="%{optflags} $(pcre-config --cflags)" \
+        --with-openssl=%{_soucedir}/openssl-1.0.2k/
+        $*
+make %{?_smp_mflags}
+%{__mv} %{_builddir}/%{name}-%{version}/objs/nginx \
+        %{_builddir}/%{name}-%{version}/objs/nginx.debug
