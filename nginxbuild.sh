@@ -2,7 +2,7 @@
 HOME=/var/tmp
 NGINX_VERSION=$(cat nginx-version)
 OPENSSL_VERSION=$(cat openssl-version)
-V_FILES=`ls ./*-versions`
+V_FILES="nginx-version openssl-version"
 
 if [ -z "$NGINX_VERSION" -a -z "$OPENSSL_VERSION" ]; then
   echo "required nginx-version and openssl-version file."
