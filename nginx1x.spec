@@ -30,7 +30,7 @@ Source10:          nginx.service
 Source11:          logrotate
 Source12:          nginx.conf
 Source15:          nginx.init
-Source16:          nginx.sysconf
+Source16:          nginx.sysconfig
 Source20:          https://www.openssl.org/source/openssl-%{openssl_version}.tar.gz
 
 # BuildRoot:         %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
