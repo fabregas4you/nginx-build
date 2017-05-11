@@ -22,3 +22,8 @@ ADD nginxbuild.sh /var/tmp/rpmbuild/nginxbuild.sh
 ADD nginx1x.spec /var/tmp/rpmbuild/SPECS/nginx1x.spec
 ADD nginx-version /var/tmp/rpmbuild/nginx-version
 ADD openssl-version /var/tmp/rpmbuild/openssl-version
+ADD nginx.service /var/tmp/rpmbuild/SOURCES/nginx.service
+ADD nginx.conf /var/tmp/rpmbuild/SOURCES/nginx.conf
+ADD nginx.init /var/tmp/rpmbuild/SOURCES/nginx.init
+ADD nginx.sysconf /var/tmp/rpmbuild/SOURCES/nginx.sysconf
+ADD logrotate /var/tmp/rpmbuild/SOURCES/logrotate
