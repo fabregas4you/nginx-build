@@ -14,6 +14,7 @@ curl -LO https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz && \
 git clone https://github.com/SpiderLabs/ModSecurity.git mod_security && \
 cd mod_security && ./autogen.sh && ./configure --enable-standalone-module ; make
 
+cd $HOME/rpmbuild/
 cp nginx-version openssl-version $HOME/rpmbuild/SOURCES && \
 rpmbuild -ba $HOME/rpmbuild/SPECS/nginx1x.spec
 
