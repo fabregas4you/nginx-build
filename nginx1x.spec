@@ -1,7 +1,7 @@
 %define  nginx_user          nginx
 %define  nginx_group         nginx
 # %define  nginx_ver           %(cat %{_sourcedir}/nginx-version)
-%define  nginx_ver           %(cat nginx-version)
+%define  nginx_ver           %(cat /var/tmp/rpmbuild/nginx-version)
 %define  nginx_home          /opt/nginx
 %define  nginx_home_tmp      %{nginx_home}/tmp
 %define  nginx_conf          %{nginx_home}/conf
@@ -9,11 +9,11 @@
 %define  nginx_ssl           %{nginx_home}/ssl
 %define  nginx_etc           %{nginx_home}/etc
 %define  nginx_data          %{nginx_home}/data
-%define  nginx_logs      %{nginx_home}/logs
+%define  nginx_logs          %{nginx_home}/logs
 %define  nginx_webroot       %{nginx_data}/html
 # %define  openssl_version     1.0.2k
 # %define  openssl_version     %(cat %{_sourcedir}/openssl-version)
-%define  openssl_version     %(cat openssl-version)
+%define  openssl_version     %(cat /var/tmp/rpmbuild/openssl-version)
 %define  ModSecurity_nginx   %{_sourcedir}/mod_security/nginx/modsecurity
 
 Name:              nginx
