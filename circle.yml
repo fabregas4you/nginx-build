@@ -1,13 +1,12 @@
 machine:
   timezone:
     Asia/Tokyo
-#  services:
-#    - docker
+  services:
+    - docker
 test:
   post:
-#    - docker build -t centos6.8/nginx-rpm -f dockerfile-6.8 .
-#    - docker run -v $CIRCLE_ARTIFACTS:/shared:rw centos6.8/nginx-rpm /bin/sh ./nginxbuild.sh
-    - /bin/sh ./nginxbuild.sh
+    - docker build -t centos6.8/nginx-rpm -f dockerfile-6.8 .
+    - docker run -v $CIRCLE_ARTIFACTS:/shared:rw centos6.8/nginx-rpm /bin/sh ./nginxbuild.sh
 #deployment:
 #  master:
 #    branch: master
