@@ -20,4 +20,5 @@ RUN chown -R docker /var/tmp/rpmbuild
 WORKDIR /var/tmp/rpmbuild
 ADD nginxbuild.sh /var/tmp/rpmbuild/nginxbuild.sh
 ADD nginx1x.spec /var/tmp/rpmbuild/SPECS/nginx1x.spec
-ADD nginx-version /var/tmp/rpmbuild/nginx-version
+ADD nginx-version /var/tmp/rpmbuild/SOURCES/nginx-version
+ADD openssl-version /var/tmp/rpmbuild/SOURCES/openssl-version
