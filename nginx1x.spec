@@ -1,23 +1,29 @@
 %define  nginx_user          nginx
 %define  nginx_group         nginx
-%define  nginx_home          %{_localstatedir}/lib/nginx
+%define  nginx_ver           %(cat %{_sourcedir}/nginx-version)
+%define  nginx_home          /opt/nginx
 %define  nginx_home_tmp      %{nginx_home}/tmp
-%define  nginx_confdir       %{_sysconfdir}/nginx
-%define  nginx_datadir       %{_datadir}/nginx
-%define  nginx_logdir        %{_localstatedir}/log/nginx
-%define  nginx_webroot       %{nginx_datadir}/html
-%define  openssl_version     1.0.2k
+%define  nginx_conf          %{nginx_home}/conf
+%define  nginx_confd         %{nginx_home}/conf.d
+%define  nginx_ssl           %{nginx_home}/ssl
+%define  nginx_etc           %{nginx_home}/etc
+%define  nginx_data          %{nginx_home}/data
+%define  nginx_logs      %{nginx_home}/logs
+%define  nginx_webroot       %{nginx_data}/html
+# %define  openssl_version     1.0.2k
+%define  openssl_version     %(cat %{_sourcedir}/openssl-version)
+%define  ModSecurity_nginx   %{_sourcedir}/mod_security/nginx/modsecurity
 
 Name:              nginx
-Epoch:             1
-Version:           1.12.0
+# Version:           1.12.0
+Version:           %{nginx_ver} 
 Release:           1%{?dist}
 Summary:           A high performance web server and reverse proxy server
 Group:             System Environment/Daemons
-License:           BSD
+License:           MIT
 URL:               http://nginx.org/
 Source0:           http://nginx.org/download/%{name}-%{version}.tar.gz
-Source1:           https://github.com/SpiderLabs/ModSecurity-nginx.git
+# Source1:           https://github.com/SpiderLabs/ModSecurity-nginx.git
 Source10:          nginx.service
 Source11:          logrotate
 Source12:          nginx.conf
@@ -25,18 +31,15 @@ Source15:          nginx.init
 Source16:          nginx.sysconf
 Source20:          https://www.openssl.org/source/openssl-%{openssl_version}.tar.gz
 
-# BuildRequires:     GeoIP-dGevel
-# BuildRequires:     gd-devel
-# BuildRequires:     perl-devel
-# BuildRequires:     perl(ExtUtils::Embed)
+# BuildRoot:         %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
+BuildRoot:         %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:     libxslt-devel
-BuildRequires:     openssl-devel >= 1.0.2
+# BuildRequires:     openssl-devel >= 1.0.2
+BuildRequires:     openssl-devel
 BuildRequires:     pcre-devel
 BuildRequires:     zlib-devel
-# Requires:          GeoIP
-# Requires:          gd
-# Requires:          perl(:MODULE_COMPAT_%(eval &quot;<code>%{__perl} -V:version</code>&quot;; echo $version))
-Requires:          openssl >= 1.0.2
+# Requires:          openssl >= 1.0.2
+Requires:          openssl
 Requires:          pcre
 Requires(pre):     shadow-utils
 Provides:          webserver
@@ -45,26 +48,26 @@ Requires(post):    chkconfig
 Requires(preun):   chkconfig, initscripts
 Requires(postun):  initscripts
 
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+%description
+UOM Multi-Domain Proxy
 
 %prep
-git clone %{SOURCE1}
-# tar zxvf %{SOURCE20}
-%setup -q -D -a 20
+# %setup -q -D -a 20
+%setup -q -D -b 20
+
+%build
+export DESTDIR=%{buildroot}
 
 ./configure \
-        --prefix=%{_sysconfdir}/nginx/ \
-        --conf-path=%{_sysconfdir}/nginx/nginx.conf \
-        --pid-path=%{_localstatedir}/run/%{name}.pid \
-        --lock-path=%{_localstatedir}/lock/subsys/%{name} \
-        --http-client-body-temp-path=%{_localstatedir}/cache/nginx/client_temp \
-        --http-proxy-temp-path=%{_localstatedir}/cache/nginx/proxy_temp \
-        --http-fastcgi-temp-path=%{_localstatedir}/cache/nginx/fastcgi_temp \
-        --http-uwsgi-temp-path=%{_localstatedir}/cache/nginx/uwsgi_temp \
-        --http-scgi-temp-path=%{_localstatedir}/cache/nginx/scgi_temp \
+        --prefix=%{nginx_home} \
+        --conf-path=%{nginx_home}/nginx.conf \
+        --pid-path=/var/run/%{name}.pid \
+        --lock-path=/var/lock/subsys/%{name} \
         --user=%{nginx_user} \
         --group=%{nginx_group} \
         --with-threads \
+        --with-select_module \
+        --with-poll_module \
         --with-http_ssl_module \
         --with-http_realip_module \
         --with-http_addition_module \
@@ -73,45 +76,58 @@ git clone %{SOURCE1}
         --with-http_random_index_module \
         --with-http_secure_link_module \
         --with-http_stub_status_module \
+        --with-http_degradation_module \
         --with-mail \
         --with-mail_ssl_module \
         --with-file-aio \
         --with-debug \
         --with-cc-opt="%{optflags} $(pcre-config --cflags)" \
-        --with-openssl=%{_soucedir}/openssl-1.0.2k/
+        --add-module=%{ModSecurity_nginx} \
+        --with-openssl=%{_builddir}/openssl-%{openssl_version}
         $*
 make %{?_smp_mflags}
 %{__mv} %{_builddir}/%{name}-%{version}/objs/nginx \
         %{_builddir}/%{name}-%{version}/objs/nginx.debug
 
-nstall
-make install DESTDIR=%{buildroot} INSTALLDIRS=vendor
+%install
+# make install DESTDIR=%{buildroot} INSTALLDIRS=vendor
 
 find %{buildroot} -type f -name .packlist -exec rm -f '{}' \;
 find %{buildroot} -type f -name perllocal.pod -exec rm -f '{}' \;
 find %{buildroot} -type f -empty -exec rm -f '{}' \;
 find %{buildroot} -type f -iname '*.so' -exec chmod 0755 '{}' \;
 
-install -p -D -m 0755 %{SOURCE15} \
-    %{buildroot}%{_initddir}/nginx
-install -p -D -m 0644 %{SOURCE16} \
-    %{buildroot}%{_sysconfdir}/sysconfig/nginx
- 
-install -p -D -m 0644 %{SOURCE11} \
-    %{buildroot}%{_sysconfdir}/logrotate.d/nginx
- 
-install -p -d -m 0755 %{buildroot}%{nginx_confdir}/conf.d
-install -p -d -m 0700 %{buildroot}%{nginx_home}
-install -p -d -m 0700 %{buildroot}%{nginx_home_tmp}
-install -p -d -m 0700 %{buildroot}%{nginx_logdir}
-install -p -d -m 0755 %{buildroot}%{nginx_webroot}
- 
-install -p -m 0644 %{SOURCE12} \
-    %{buildroot}%{nginx_confdir}
-rm -fr %{buildroot}%{_prefix}/html
- 
-install -p -D -m 0644 %{_builddir}/nginx-%{version}/man/nginx.8 \
-    %{buildroot}%{_mandir}/man8/nginx.8
+install -p -d -m 0750 %{buildroot}%{nginx_home}
+install -p -d -m 0750 %{buildroot}%{nginx_home_tmp}
+install -p -d -m 0750 %{buildroot}%{nginx_conf}
+install -p -d -m 0750 %{buildroot}%{nginx_confd}
+install -p -d -m 0750 %{buildroot}%{nginx_ssl}
+install -p -d -m 0750 %{buildroot}%{nginx_etc}
+install -p -d -m 0750 %{buildroot}%{nginx_data}
+install -p -d -m 0750 %{buildroot}%{nginx_logs}
+install -p -d -m 0750 %{buildroot}%{nginx_webroot}
+install -p -D -m 0644 %{SOURCE11} %{buildroot}%{_sysconfdir}/logrotate.d/nginx
+
+%if 0%{?centos} <= 6
+install -p -D -m 0755 %{SOURCE15} %{buildroot}/%{_sysconfdir}/init.d/nginx
+install -p -D -m 0644 %{SOURCE16} %{buildroot}/%{_sysconfdir}/sysconfig/nginx
+%else
+install -p -m 0755 %{SOURCE10} ${buildroot}/usr/lib/systemd/system/nginx.service
+%endif
+
+make install DESTDIR=${RPM_BUILD_ROOT} INSTALL="install -p"
+install -d ${RPM_BUILD_ROOT}/%{nginx_home}/logs
+install -d ${RPM_BUILD_ROOT}/%{nginx_home}/cache
+install -d ${RPM_BUILD_ROOT}/%{nginx_home}/conf/customers
+install -d ${RPM_BUILD_ROOT}/%{nginx_home}/conf/upstreams
+install -d ${RPM_BUILD_ROOT}/%{nginx_home}/ssl/key
+install -d ${RPM_BUILD_ROOT}/%{nginx_home}/ssl/crt
+
+if [ -f ${RPM_BUILD_ROOT}/%{nginx_home}/conf/nginx.conf ]; then
+  rm -f ${RPM_BUILD_ROOT}/%{nginx_home}/conf/nginx.conf
+fi
+
+%clean
 
 %pre
 getent group %{nginx_group} &gt; /dev/null || groupadd -r %{nginx_group}
@@ -119,62 +135,59 @@ getent passwd %{nginx_user} &gt; /dev/null || \
     useradd -r -d %{nginx_home} -g %{nginx_group} \
     -s /sbin/nologin -c &quot;Nginx web server&quot; %{nginx_user}
 exit 0
+
+if [ -f %{nginx_home}/sbin/nginx ] ; then
+  mv %{nginx_home}/sbin/nginx %{nginx_home}/sbin/nginx.old
+fi
  
 %post
-if [ $1 -eq 1 ]; then
+%if 0%{?centos} <= 6
     /sbin/chkconfig --add %{name}
-fi
-if [ $1 -eq 2 ]; then
-    # Make sure these directories are not world readable.
-    chmod 770 %{nginx_home}
-    chmod 770 %{nginx_home_tmp}
-    chmod 770 %{nginx_logdir}
-fi
+%else
+    /usr/bin/systemctl enable nginx.service
+%endif
  
 %preun
+%if 0%{?centos} <= 6
 if [ $1 -eq 0 ]; then
-    /sbin/service %{name} stop &gt;/dev/null 2&gt;&amp;1
-    /sbin/chkconfig --del %{name}
+   /sbin/service %{name} stop
+   /sbin/chkconfig --del %{name}
 fi
+%else
+if [ $1 = 0 ]; then
+   /usr/bin/systemctl stop nginx.service
+   /usr/bin/systemctl disable nginx.service
+fi
+%endif
  
 %postun
-if [ $1 -eq 2 ]; then
-    /sbin/service %{name} upgrade || :
-fi
 
 %files
+%defattr(-,root,root,-)
 %doc LICENSE CHANGES README
-%{_initddir}/nginx
-%config(noreplace) %{_sysconfdir}/sysconfig/nginx
-%{nginx_datadir}/
-%{_sbindir}/nginx
-%{_mandir}/man3/nginx.3pm*
-%{_mandir}/man8/nginx.8*
-%dir %{nginx_confdir}
-%dir %{nginx_confdir}/conf.d
-%config(noreplace) %{nginx_confdir}/fastcgi.conf
-%config(noreplace) %{nginx_confdir}/fastcgi.conf.default
-%config(noreplace) %{nginx_confdir}/fastcgi_params
-%config(noreplace) %{nginx_confdir}/fastcgi_params.default
-%config(noreplace) %{nginx_confdir}/koi-utf
-%config(noreplace) %{nginx_confdir}/koi-win
-%config(noreplace) %{nginx_confdir}/mime.types
-%config(noreplace) %{nginx_confdir}/mime.types.default
-%config(noreplace) %{nginx_confdir}/nginx.conf
-%config(noreplace) %{nginx_confdir}/nginx.conf.default
-%config(noreplace) %{nginx_confdir}/scgi_params
-%config(noreplace) %{nginx_confdir}/scgi_params.default
-%config(noreplace) %{nginx_confdir}/uwsgi_params
-%config(noreplace) %{nginx_confdir}/uwsgi_params.default
-%config(noreplace) %{nginx_confdir}/win-utf
-%config(noreplace) %{nginx_confdir}/conf.d/virtual.conf
-%config(noreplace) %{_sysconfdir}/logrotate.d/nginx
-%dir %{perl_vendorarch}/auto/nginx
-%{perl_vendorarch}/nginx.pm
-%{perl_vendorarch}/auto/nginx/nginx.so
-%attr(700,%{nginx_user},%{nginx_group}) %dir %{nginx_home}
-%attr(700,%{nginx_user},%{nginx_group}) %dir %{nginx_home_tmp}
-%attr(700,%{nginx_user},%{nginx_group}) %dir %{nginx_logdir}
- 
+# %config(noreplace) %{nginx_home}/conf/*
+
+%if 0%{?centos} <= 6
+%config(noreplace) /etc/sysconfig/nginx
+%config(noreplace) /etc/logrotate.d/nginx
+%endif
+
+%{nginx_home}/*
+# %{nginx_home}/sbin/nginx
+# %{nginx_home}/html/*
+# %{nginx_home}/logs
+# %{nginx_home}/cache
+# %{nginx_home}/ssl/crt
+# %{nginx_home}/ssl/key
+
+%if 0%{?centos} <= 6
+  /etc/init.d/nginx
+%else
+  /usr/lib/systemd/system/nginx.service
+%endif
+
+%attr(750,%{nginx_user},%{nginx_group}) %dir %{nginx_home}
+%attr(750,%{nginx_user},%{nginx_group}) %dir %{nginx_home_tmp}
+%attr(750,%{nginx_user},%{nginx_group}) %dir %{nginx_logs}
+
 %changelog
-* Wed May 10 2017 shinichi fukuda &lt;s-fukuda@iij.ad.jp&gt; - 1.12.0-1

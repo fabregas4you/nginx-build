@@ -1,0 +1,7 @@
+upstream upstream_backends {
+  server <=backend_01=>:8080;
+  server <=backend_02=>:8080;
+  server <=repaire_01=>:8080 backup;
+  server <=repaire_02=>:8080 backup;
+  keepalive 100000;
+

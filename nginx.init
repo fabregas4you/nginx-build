@@ -1,0 +1,202 @@
+#! /bin/sh
+#
+# nginx
+#
+# chkconfig: - 90 10
+# description: nginx is high-performance HTTP server and reverse proxy.
+# processname: nginx
+# config: /etc/sysconfig/nginx
+# pidfile: /var/run/nginx.pid
+
+### BEGIN INIT INFO
+# Provides: varnish
+# Required-Start: $network $local_fs $remote_fs
+# Required-Stop: $network $local_fs $remote_fs
+# Default-Start:
+# Default-Stop:
+# Should-Start: $syslog
+# Short-Description: start and stop varnish
+# Description: nginx is high-performance HTTP server and reverse proxy.
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+pidfile="/var/run/nginx.pid"
+
+exec="/var/service/cas/nginx/sbin/nginx"
+prog="nginx"
+daemon_options="/etc/sysconfig/${prog}"
+lockfile="/var/lock/subsys/nginx"
+
+# load daemon options
+[ -e ${daemon_options} ] && . ${daemon_options}
+
+start() {
+    configtest_q || exit 1
+    echo -n "start nginx : "
+    ${exec} ${nginx_opts}
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        echo "[OK]"
+    else
+        echo "[NG]"
+        exit $ret
+    fi
+}
+
+stop() {
+    ngx_status_q || exit 1
+    # kill -TERM
+    echo -n "shutdown nginx : "
+    if [ ! -f ${pidfile} ]; then
+        echo "can't find pidfile (${pidfile})"
+        exit 1
+    fi
+    kill -TERM `cat ${pidfile}`
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        echo "[OK]"
+    else
+        echo "[NG]"
+        exit $ret
+    fi
+}
+
+restart() {
+    stop
+    start
+}
+
+configtest() {
+    ${exec} -t -c ${daemon_config} 2>&1
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        echo "[OK]"
+    else
+        echo "[NG]"
+        exit $ret
+    fi
+}
+
+configtest_q() {
+    configtest > /dev/null 2>&1
+}
+
+reload_conf() {
+    ngx_status_q || exit 1
+    configtest_q || exit 1
+    echo -n "reload config : "
+    # kill -HUP
+    kill -HUP `cat ${pidfile}`
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        echo "[OK]"
+    else
+        echo "[NG]"
+        exit $ret
+    fi
+}
+
+graceful() {
+    echo -n "shutdown graceful : "
+    # kill -QUIT
+    kill -QUIT `cat ${pidfile}`
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        echo "[OK]"
+    else
+        echo "[NG]"
+        exit $ret
+    fi
+}
+
+stop_worker() {
+    echo -n "shutdown worker : "
+    # kill -WINCH
+    kill -WINCH `cat ${pidfile}`
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        echo "[OK]"
+    else
+        echo "[NG]"
+        exit $ret
+    fi
+}
+
+reopen_log() {
+    echo -n "reopen log file : "
+    # kill -USR1
+    kill -USR1 `cat ${pidfile}`
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        echo "[OK]"
+    else
+        echo "[NG]"
+        exit $ret
+    fi
+}
+
+ngx_status() {
+    status -p ${pidfile} ${prog}
+}
+
+ngx_status_q() {
+    ngx_status > /dev/null 2>&1
+}
+
+master_upgrade() {
+    ngx_status_q || exit 1
+    configtest_q || exit 1
+    echo "on-the-fly upgrade..."
+    old_master_pid=`cat ${pidfile}`
+    old_worker_pid=`ps aux | grep "nginx: worker process" | grep -v grep | awk '{print $2}' | tr "\n" "|" | sed -E 's/\|$//g'`
+    echo "  old master process's pid : ${old_master_pid}"
+    kill -USR2 ${old_master_pid}
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        sleep 5
+        echo "  new master process's pid : `cat ${pidfile}`"
+    else
+        echo "  failed to start with new binnary X("
+        exit $ret
+    fi
+    sleep 1
+    echo -n "  graceful shutdown old worker process : "
+    kill -WINCH ${old_master_pid}
+    ret=$?
+    if [ $ret -eq 0 ];then
+        while [ `ps aux | awk '{ if ( $2 ~ /^'${old_worker_pid}'$/ ) print }' | wc -l ` -gt 0 ]; do
+          echo -n "."
+          sleep 1s
+        done
+        echo "[OK]"
+    else
+        echo "[NG]"
+        exit $ret
+    fi
+    sleep 1
+    echo -n "  graceful shutdown old master process : "
+    kill -QUIT ${old_master_pid}
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        echo "[OK]"
+    else
+        echo "[NG]"
+        exit $ret
+    fi
+}
+
+case $1 in
+    start|stop|restart|configtest|reload_conf|graceful|stop_worker|reopen_log|master_upgrade)
+        $1
+        ;;
+    status)
+        ngx_status
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|configtest|reload_conf|graceful|stop_worker|reopen_log|status|master_upgrade}"
+        exit 2
+esac
+
+exit $?

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+daemon_config="/opt/${prog}/conf/${prog}.conf"
+
+nginx_opts="-c ${daemon_config}"
