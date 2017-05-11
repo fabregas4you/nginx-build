@@ -10,7 +10,7 @@ RUN yum install -y httpd-devel apache2-prefork-dev apache2-threaded-dev
 
 # nginx depends
 RUN yum -y install readline-devel ncurses-devel gdbm-devel glibc-devel gcc openssl-devel libyaml-devel libffi-devel zlib-devel \
-apr apr-devel apr-util apr-util-devel pcre pcre-devel libxml2 libxml2-devel curl curl-devel
+apr apr-devel apr-util apr-util-devel pcre pcre-devel libxml2 libxml2-devel curl curl-devel libxslt-devel
 
 RUN useradd docker
 
