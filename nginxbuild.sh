@@ -9,7 +9,8 @@ if [ -z "$NGINX_VERSION" -a -z "$OPENSSL_VERSION" ]; then
   exit 1
 fi
 
-ls ./$V_FILES && \
+# ls ./$V_FILES && \
+ls . && \
 cp $V_FILES $HOME/rpmbuild/SOURCES 
 
 cd $HOME/rpmbuild/SOURCES && curl -LO http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && \
