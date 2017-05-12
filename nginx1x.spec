@@ -1,5 +1,5 @@
-%define  nginx_user          nginx
-%define  nginx_group         nginx
+%define  nginx_user          nobody
+%define  nginx_group         nobody
 # %define  nginx_ver           %(cat %{_sourcedir}/nginx-version)
 %define  nginx_ver           %(cat /var/tmp/rpmbuild/nginx-version)
 %define  nginx_home          /opt/nginx
@@ -19,7 +19,7 @@
 Name:              nginx
 # Version:           1.12.0
 Version:           %{nginx_ver} 
-Release:           1%{?dist}
+Release:           2%{?dist}
 Summary:           A high performance web server and reverse proxy server
 Group:             System Environment/Daemons
 License:           MIT

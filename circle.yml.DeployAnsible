@@ -3,6 +3,13 @@ machine:
     Asia/Tokyo
   services:
     - docker
+  python:
+    version: 2.7.10
+
+dependencies:  
+  pre:
+    - pip install ansible
+    - pip install --upgrade setuptools
 
 test:
   post:
@@ -21,9 +28,10 @@ deployment:
 #    commands:
 #      - bundle install
 #      - bundle exec cap production deploy
-#  staging:
-#    branch: master
-#    commands:
+  staging:
+    branch: master
+    commands:
+      - ansible-playbook staging/deploy.yml -i staging/vars --vault-password-file ~/.vault_password.txt
 #      - bundle install
 #      - bundle exec cap staging deploy
 #  production:
