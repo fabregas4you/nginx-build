@@ -7,10 +7,10 @@ test:
   post:
     - docker build -t centos6.8/nginx-rpm -f dockerfile-6.8 .
     - docker run -v $CIRCLE_ARTIFACTS:/shared:rw centos6.8/nginx-rpm /bin/sh ./nginxbuild.sh
-#deployment:
-#  master:
-#    branch: master
-#    commands:
-#      - go get github.com/fabregas4you/github-release
-#      - cp $CIRCLE_ARTIFACTS/*.rpm .
-#      - ./github-release.sh
+deployment:
+  master:
+    branch: master
+    commands:
+      - go get github.com/aktau/github-release
+      - cp $CIRCLE_ARTIFACTS/*.rpm .
+      - ./github-release.sh
