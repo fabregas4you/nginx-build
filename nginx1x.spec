@@ -1,25 +1,21 @@
 %define  nginx_user          nobody
 %define  nginx_group         nobody
-# %define  nginx_ver           %(cat %{_sourcedir}/nginx-version)
 %define  nginx_ver           %(cat /var/tmp/rpmbuild/nginx-version)
 %define  nginx_home          /opt/nginx
-%define  nginx_home_tmp      %{nginx_home}/tmp
 %define  nginx_conf          %{nginx_home}/conf
-%define  nginx_confd         %{nginx_home}/conf.d
 %define  nginx_ssl           %{nginx_home}/ssl
 %define  nginx_etc           %{nginx_home}/etc
 %define  nginx_data          %{nginx_home}/data
 %define  nginx_logs          %{nginx_home}/logs
 %define  nginx_webroot       %{nginx_data}/html
 # %define  openssl_version     1.0.2k
-# %define  openssl_version     %(cat %{_sourcedir}/openssl-version)
 %define  openssl_version     %(cat /var/tmp/rpmbuild/openssl-version)
 %define  ModSecurity_nginx   %{_sourcedir}/mod_security/nginx/modsecurity
 
 Name:              nginx
 # Version:           1.12.0
 Version:           %{nginx_ver} 
-Release:           2%{?dist}
+Release:           3%{?dist}
 Summary:           A high performance web server and reverse proxy server
 Group:             System Environment/Daemons
 License:           MIT
@@ -100,7 +96,6 @@ find %{buildroot} -type f -empty -exec rm -f '{}' \;
 find %{buildroot} -type f -iname '*.so' -exec chmod 0755 '{}' \;
 
 install -p -d -m 0750 %{buildroot}%{nginx_home}
-install -p -d -m 0750 %{buildroot}%{nginx_home_tmp}
 install -p -d -m 0750 %{buildroot}%{nginx_conf}
 install -p -d -m 0750 %{buildroot}%{nginx_confd}
 install -p -d -m 0750 %{buildroot}%{nginx_ssl}
@@ -189,7 +184,6 @@ fi
 %endif
 
 %attr(750,%{nginx_user},%{nginx_group}) %dir %{nginx_home}
-%attr(750,%{nginx_user},%{nginx_group}) %dir %{nginx_home_tmp}
 %attr(750,%{nginx_user},%{nginx_group}) %dir %{nginx_logs}
 
 %changelog
