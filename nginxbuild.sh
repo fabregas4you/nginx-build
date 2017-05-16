@@ -12,9 +12,8 @@ if [ -z "$NGINX_VERSION" -a -z "$OPENSSL_VERSION" ]; then
 fi
 
 # ls ./$V_FILES && \
-
-echo $_CFLAGS
-echo $_CPPFLAGS
+# echo $_CFLAGS
+# echo $_CPPFLAGS
 
 cd $HOME/rpmbuild/SOURCES && curl -LO http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && \
 curl -LO https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz && \
