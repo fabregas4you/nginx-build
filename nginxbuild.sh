@@ -13,10 +13,13 @@ fi
 
 # ls ./$V_FILES && \
 
+echo $_CFLAGS
+echo $_CPPFLAGS
+
 cd $HOME/rpmbuild/SOURCES && curl -LO http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && \
 curl -LO https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz && \
 git clone https://github.com/SpiderLabs/ModSecurity.git mod_security && \
-cd mod_security && ./autogen.sh export && CFLAGS=$_CFLAGS export CPPFLAGS=$_CPPFLAGS \
+cd mod_security && ./autogen.sh && CFLAGS=$_CFLAGS CPPFLAGS=$_CPPFLAGS \
 ./configure --enable-standalone-module ; make
 
 rpmbuild -ba $HOME/rpmbuild/SPECS/nginx1x.spec
