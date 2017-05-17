@@ -24,7 +24,7 @@
 
 pidfile="/var/run/nginx.pid"
 
-exec="/var/service/cas/nginx/sbin/nginx"
+exec="/opt/nginx/sbin/nginx"
 prog="nginx"
 daemon_options="/etc/sysconfig/${prog}"
 lockfile="/var/lock/subsys/nginx"
