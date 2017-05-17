@@ -15,7 +15,7 @@
 Name:              nginx
 # Version:           1.12.0
 Version:           %{nginx_ver} 
-Release:           3%{?dist}
+Release:           4%{?dist}
 Summary:           A high performance web server and reverse proxy server
 Group:             System Environment/Daemons
 License:           MIT
@@ -169,7 +169,7 @@ fi
 %config(noreplace) /etc/logrotate.d/nginx
 %endif
 
-%{nginx_home}/*
+%config(noreplace) %{nginx_home}/*
 # %{nginx_home}/sbin/nginx
 # %{nginx_home}/html/*
 # %{nginx_home}/logs
