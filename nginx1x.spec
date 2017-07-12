@@ -15,7 +15,7 @@
 Name:              nginx
 # Version:           1.12.0
 Version:           %{nginx_ver} 
-Release:           4%{?dist}
+Release:           5%{?dist}
 Summary:           A high performance web server and reverse proxy server
 Group:             System Environment/Daemons
 License:           MIT
