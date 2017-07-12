@@ -127,11 +127,13 @@ fi
 %clean
 
 %pre
+if [ $1 = 0 ]; then
 getent group %{nginx_group} &gt; /dev/null || groupadd -r %{nginx_group}
 getent passwd %{nginx_user} &gt; /dev/null || \
     useradd -r -d %{nginx_home} -g %{nginx_group} \
     -s /sbin/nologin -c &quot;Nginx web server&quot; %{nginx_user}
-exit 0
+# exit 0
+fi
 
 if [ -f %{nginx_home}/sbin/nginx ] ; then
   mv %{nginx_home}/sbin/nginx %{nginx_home}/sbin/nginx.old
