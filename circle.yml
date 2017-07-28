@@ -16,6 +16,7 @@ deployment:
       - go get github.com/aktau/github-release
       - cp $CIRCLE_ARTIFACTS/*.rpm .
       - /bin/sh ./github-release.sh
+
 #  develop:
 #    branch: develop
 #    commands:
